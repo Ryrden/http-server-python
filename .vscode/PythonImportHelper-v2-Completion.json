@@ -13,7 +13,7 @@
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def main():\n    server_socket = socket.create_server((\"localhost\", 4221), reuse_port=True)\n    server_socket.accept() # wait for client\nif __name__ == \"__main__\":\n    main()",
+        "peekOfCode": "def main():\n    server_socket = socket.create_server((\"localhost\", 4221), reuse_port=True)\n    server_socket.accept()[0].sendall(b\"HTTP/1.1 200 OK\\r\\n\\r\\n\")\nif __name__ == \"__main__\":\n    main()",
         "detail": "app.main",
         "documentation": {}
     }

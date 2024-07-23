@@ -5,4 +5,4 @@
 # CodeCrafters uses this file to test your code. Don't make any changes here!
 #
 # DON'T EDIT THIS!
-exec pipenv run python3 -m app.main "$@"
+pipenv run python3 -m app.main "$@"
