@@ -18,11 +18,38 @@
         "documentation": {}
     },
     {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
+        "label": "handle_request",
+        "kind": 2,
+        "importPath": "app.main",
+        "description": "app.main",
+        "peekOfCode": "def handle_request(data):\n    request = data.split(\"\\r\\n\")\n    path = request[0].split(\" \")[1]\n    if path == \"/\":\n        return \"HTTP/1.1 200 OK\\r\\n\\r\\n\"\n    if path == \"/user-agent\":\n        user_agent = request[2].split(\":\")[1].strip()\n        return f\"HTTP/1.1 200 OK\\r\\nContent-Type: text/plain\\r\\nContent-Length: {len(user_agent)}\\r\\n\\r\\n{user_agent}\"\n    if path.startswith(\"/echo/\"):\n        match = re.match(r\"^/echo/(.*)$\", path)",
+        "detail": "app.main",
+        "documentation": {}
+    },
+    {
+        "label": "client_handler",
+        "kind": 2,
+        "importPath": "app.main",
+        "description": "app.main",
+        "peekOfCode": "def client_handler(client):\n    try:\n        data = client.recv(1024).decode().strip()\n        if data:\n            response = handle_request(data)\n            client.send(response.encode())\n    finally:\n        client.close()\ndef main():\n    server_socket = socket.create_server((\"localhost\", 4221), reuse_port=True)",
+        "detail": "app.main",
+        "documentation": {}
+    },
+    {
         "label": "main",
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def main():\n    server_socket = socket.create_server((\"localhost\", 4221), reuse_port=True)\n    client, _ = server_socket.accept()\n    data = client.recv(1024).decode().strip()\n    request = data.split(\"\\r\\n\")\n    path = request[0].split(\" \")[1]\n    if path == \"/\":\n        response = \"HTTP/1.1 200 OK\\r\\n\\r\\n\"\n    elif path == \"/user-agent\":\n        user_agent = request[2].split(\":\")[1].strip()",
+        "peekOfCode": "def main():\n    server_socket = socket.create_server((\"localhost\", 4221), reuse_port=True)\n    server_socket.listen()\n    while True:\n        client, _ = server_socket.accept()\n        threading.Thread(target=client_handler, args=(client,)).start()\nif __name__ == \"__main__\":\n    main()",
         "detail": "app.main",
         "documentation": {}
     }
