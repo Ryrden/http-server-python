@@ -22,7 +22,7 @@
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def main():\n    server_socket = socket.create_server((\"localhost\", 4221), reuse_port=True)\n    client, _ = server_socket.accept()\n    data = client.recv(1024).decode()\n    request, *_ = data.split(\"\\r\\n\") \n    [_, path, _] = request.split(\" \")\n    echo_regex = re.compile(r\"^/echo/(.*)$\")\n    if path == \"/\":\n        response = \"HTTP/1.1 200 OK\\r\\n\\r\\n\"\n    elif match := echo_regex.match(path):",
+        "peekOfCode": "def main():\n    server_socket = socket.create_server((\"localhost\", 4221), reuse_port=True)\n    client, _ = server_socket.accept()\n    data = client.recv(1024).decode().strip()\n    request = data.split(\"\\r\\n\")\n    path = request[0].split(\" \")[1]\n    if path == \"/\":\n        response = \"HTTP/1.1 200 OK\\r\\n\\r\\n\"\n    elif path == \"/user-agent\":\n        user_agent = request[2].split(\":\")[1].strip()",
         "detail": "app.main",
         "documentation": {}
     }
