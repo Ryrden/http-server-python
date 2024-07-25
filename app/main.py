@@ -3,38 +3,87 @@ import socket
 import threading
 import sys
 
+class HTTPRequest:
+    def __init__(self, data):
+        self.method, self.path, self.protocol = None, None, None
+        self.headers, self.body = {}, ""
+        self.parse(data)
 
-def handle_request(data):
-    request = data.split("\r\n")
-    path = request[0].split(" ")[1]
+    def parse(self, data):
+        lines = data.split("\r\n")
+        self.method, self.path, self.protocol = lines[0].split(" ")
+        header_lines = lines[1:]
 
-    if path == "/":
-        return "HTTP/1.1 200 OK\r\n\r\n"
+        body_started = False
+        for line in header_lines:
+            if body_started:
+                self.body += line
+            elif line == "":
+                body_started = True
+            elif ": " in line:
+                key, value = line.split(": ", 1)
+                self.headers[key] = value
 
-    if path == "/user-agent":
-        user_agent = request[2].split(":")[1].strip()
-        return f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}"
+class HTTPResponse:
+    def __init__(self, status_code=200, reason="OK", headers=None, body=""):
+        if headers is None:
+            headers = {}
+        self.status_code = status_code
+        self.reason = reason
+        self.headers = headers
+        self.body = body
 
-    if path.startswith("/echo/"):
-        match = re.match(r"^/echo/(.*)$", path)
-        if match:
-            echo_message = match.group(1)
-            return f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(echo_message)}\r\n\r\n{echo_message}"
+    def build(self):
+        response_line = f"HTTP/1.1 {self.status_code} {self.reason}\r\n"
+        headers = "\r\n".join([f"{key}: {value}" for key, value in self.headers.items()])
+        return f"{response_line}{headers}\r\n\r\n{self.body}"
 
-    if path.startswith("/files/"):
+def handle_request(request_data):
+    request = HTTPRequest(request_data)
+
+    if request.method == "GET" and request.path == "/":
+        return HTTPResponse().build()
+
+    if request.method == "GET" and request.path == "/user-agent":
+        user_agent = request.headers.get("User-Agent", "")
+        return HTTPResponse(
+            headers={"Content-Type": "text/plain", "Content-Length": str(len(user_agent))},
+            body=user_agent
+        ).build()
+
+    if request.method == "GET" and (match := re.match(r"^/echo/(.+)$", request.path)):
+        echo_message = match.group(1)
+        return HTTPResponse(
+            headers={"Content-Type": "text/plain", "Content-Length": str(len(echo_message))},
+            body=echo_message
+        ).build()
+
+    if match := re.match(r"^/files/(.+)$", request.path):
         directory = sys.argv[2]
-        match = re.match(r"^/files/(.*)$", path)
-        if match:
-            file_name = match.group(1)
+        file_name = match.group(1)
+
+        if request.method == "GET":
             try:
                 with open(f"{directory}/{file_name}", "r") as file:
                     file_content = file.read()
-                    return f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(file_content)}\r\n\r\n{file_content}"
+                    return HTTPResponse(
+                        headers={"Content-Type": "application/octet-stream", "Content-Length": str(len(file_content))},
+                        body=file_content
+                    ).build()
             except Exception:
-                return "HTTP/1.1 404 Not Found\r\n\r\n"    
+                return HTTPResponse(status_code=404, reason="Not Found").build()
+        
+        if request.method == "POST":
+            try:
+                content_length = int(request.headers.get("Content-Length", 0))
+                file_content = request.body[:content_length]
+                with open(f"{directory}/{file_name}", "w") as file:
+                    file.write(file_content)
+                return HTTPResponse(status_code=201, reason="Created").build()
+            except Exception:
+                return HTTPResponse(status_code=400, reason="Bad Request").build()
 
-    return "HTTP/1.1 404 Not Found\r\n\r\n"
-
+    return HTTPResponse(status_code=404, reason="Not Found").build()
 
 def client_handler(client):
     try:
@@ -45,7 +94,6 @@ def client_handler(client):
     finally:
         client.close()
 
-
 def main():
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     server_socket.listen()
@@ -53,7 +101,6 @@ def main():
     while True:
         client, _ = server_socket.accept()
         threading.Thread(target=client_handler, args=(client,)).start()
-
 
 if __name__ == "__main__":
     main()

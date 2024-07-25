@@ -36,11 +36,29 @@
         "documentation": {}
     },
     {
+        "label": "HTTPRequest",
+        "kind": 6,
+        "importPath": "app.main",
+        "description": "app.main",
+        "peekOfCode": "class HTTPRequest:\n    def __init__(self, data):\n        self.method, self.path, self.protocol = None, None, None\n        self.headers, self.body = {}, \"\"\n        self.parse(data)\n    def parse(self, data):\n        lines = data.split(\"\\r\\n\")\n        self.method, self.path, self.protocol = lines[0].split(\" \")\n        header_lines = lines[1:]\n        body_started = False",
+        "detail": "app.main",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPResponse",
+        "kind": 6,
+        "importPath": "app.main",
+        "description": "app.main",
+        "peekOfCode": "class HTTPResponse:\n    def __init__(self, status_code=200, reason=\"OK\", headers=None, body=\"\"):\n        if headers is None:\n            headers = {}\n        self.status_code = status_code\n        self.reason = reason\n        self.headers = headers\n        self.body = body\n    def build(self):\n        response_line = f\"HTTP/1.1 {self.status_code} {self.reason}\\r\\n\"",
+        "detail": "app.main",
+        "documentation": {}
+    },
+    {
         "label": "handle_request",
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def handle_request(data):\n    request = data.split(\"\\r\\n\")\n    path = request[0].split(\" \")[1]\n    if path == \"/\":\n        return \"HTTP/1.1 200 OK\\r\\n\\r\\n\"\n    if path == \"/user-agent\":\n        user_agent = request[2].split(\":\")[1].strip()\n        return f\"HTTP/1.1 200 OK\\r\\nContent-Type: text/plain\\r\\nContent-Length: {len(user_agent)}\\r\\n\\r\\n{user_agent}\"\n    if path.startswith(\"/echo/\"):\n        match = re.match(r\"^/echo/(.*)$\", path)",
+        "peekOfCode": "def handle_request(request_data):\n    request = HTTPRequest(request_data)\n    if request.method == \"GET\" and request.path == \"/\":\n        return HTTPResponse().build()\n    if request.method == \"GET\" and request.path == \"/user-agent\":\n        user_agent = request.headers.get(\"User-Agent\", \"\")\n        return HTTPResponse(\n            headers={\"Content-Type\": \"text/plain\", \"Content-Length\": str(len(user_agent))},\n            body=user_agent\n        ).build()",
         "detail": "app.main",
         "documentation": {}
     },
