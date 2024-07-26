@@ -58,7 +58,7 @@
         "kind": 6,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "class HTTPResponse:\n    def __init__(self, status_code: int = 200, reason: str = \"OK\", headers: dict[str, str] = None, body: str = \"\") -> None:\n        self.status_code = status_code\n        self.reason = reason\n        self.headers = headers or {}\n        self.body = body\n    def build(self) -> str:\n        response_line = f\"HTTP/1.1 {self.status_code} {self.reason}\\r\\n\"\n        headers = \"\\r\\n\".join(f\"{key}: {value}\" for key, value in self.headers.items())\n        return f\"{response_line}{headers}\\r\\n\\r\\n{self.body}\"",
+        "peekOfCode": "class HTTPResponse:\n    def __init__(self, status_code: int = 200, reason: str = \"OK\", headers: dict[str, str] = None, body: bytes = b\"\") -> None:\n        self.status_code = status_code\n        self.reason = reason\n        self.headers = headers or {}\n        self.body = body\n    def build(self) -> bytes:\n        response_line = f\"HTTP/1.1 {self.status_code} {self.reason}\\r\\n\"\n        headers = \"\\r\\n\".join(f\"{key}: {value}\" for key, value in self.headers.items())\n        return response_line.encode() + headers.encode() + b\"\\r\\n\\r\\n\" + self.body",
         "detail": "app.main",
         "documentation": {}
     },
@@ -67,7 +67,7 @@
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def handle_root() -> str:\n    return HTTPResponse().build()\ndef handle_user_agent(request: HTTPRequest) -> str:\n    user_agent = request.headers.get(\"User-Agent\", \"\")\n    return HTTPResponse(\n        headers={\"Content-Type\": \"text/plain\", \"Content-Length\": str(len(user_agent))},\n        body=user_agent\n    ).build()\ndef handle_echo(request: HTTPRequest) -> str:\n    match = re.match(r\"^/echo/(.+)$\", request.path)",
+        "peekOfCode": "def handle_root() -> bytes:\n    return HTTPResponse().build()\ndef handle_user_agent(request: HTTPRequest) -> bytes:\n    user_agent = request.headers.get(\"User-Agent\", \"\").encode()\n    return HTTPResponse(\n        headers={\"Content-Type\": \"text/plain\", \"Content-Length\": str(len(user_agent))},\n        body=user_agent\n    ).build()\ndef handle_echo(request: HTTPRequest) -> bytes:\n    match = re.match(r\"^/echo/(.+)$\", request.path)",
         "detail": "app.main",
         "documentation": {}
     },
@@ -76,7 +76,7 @@
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def handle_user_agent(request: HTTPRequest) -> str:\n    user_agent = request.headers.get(\"User-Agent\", \"\")\n    return HTTPResponse(\n        headers={\"Content-Type\": \"text/plain\", \"Content-Length\": str(len(user_agent))},\n        body=user_agent\n    ).build()\ndef handle_echo(request: HTTPRequest) -> str:\n    match = re.match(r\"^/echo/(.+)$\", request.path)\n    if match:\n        echo_message = match.group(1)",
+        "peekOfCode": "def handle_user_agent(request: HTTPRequest) -> bytes:\n    user_agent = request.headers.get(\"User-Agent\", \"\").encode()\n    return HTTPResponse(\n        headers={\"Content-Type\": \"text/plain\", \"Content-Length\": str(len(user_agent))},\n        body=user_agent\n    ).build()\ndef handle_echo(request: HTTPRequest) -> bytes:\n    match = re.match(r\"^/echo/(.+)$\", request.path)\n    if match:\n        echo_message = match.group(1).strip()",
         "detail": "app.main",
         "documentation": {}
     },
@@ -85,7 +85,7 @@
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def handle_echo(request: HTTPRequest) -> str:\n    match = re.match(r\"^/echo/(.+)$\", request.path)\n    if match:\n        echo_message = match.group(1)\n        response = HTTPResponse(\n            headers={\"Content-Type\": \"text/plain\", \"Content-Length\": str(len(echo_message))},\n            body=echo_message\n        )\n        if \"Accept-Encoding\" in request.headers and \"gzip\" in request.headers[\"Accept-Encoding\"]:\n            response.headers[\"Content-Encoding\"] = \"gzip\"",
+        "peekOfCode": "def handle_echo(request: HTTPRequest) -> bytes:\n    match = re.match(r\"^/echo/(.+)$\", request.path)\n    if match:\n        echo_message = match.group(1).strip()\n        body = echo_message.encode()\n        headers = {\"Content-Type\": \"text/plain\"}\n        if \"Accept-Encoding\" in request.headers and \"gzip\" in request.headers[\"Accept-Encoding\"]:\n            body = gzip.compress(body)\n            headers[\"Content-Encoding\"] = \"gzip\"\n        headers[\"Content-Length\"] = str(len(body))",
         "detail": "app.main",
         "documentation": {}
     },
@@ -94,7 +94,7 @@
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def handle_file_get(_: HTTPRequest, file_name: str, directory: str) -> str:\n    try:\n        with open(f\"{directory}/{file_name}\", \"r\") as file:\n            file_content = file.read()\n        return HTTPResponse(\n            headers={\"Content-Type\": \"application/octet-stream\", \"Content-Length\": str(len(file_content))},\n            body=file_content\n        ).build()\n    except FileNotFoundError:\n        return HTTPResponse(status_code=404, reason=\"Not Found\").build()",
+        "peekOfCode": "def handle_file_get(_: HTTPRequest, file_name: str, directory: str) -> bytes:\n    try:\n        with open(f\"{directory}/{file_name}\", \"rb\") as file:\n            file_content = file.read()\n        return HTTPResponse(\n            headers={\"Content-Type\": \"application/octet-stream\", \"Content-Length\": str(len(file_content))},\n            body=file_content\n        ).build()\n    except FileNotFoundError:\n        return HTTPResponse(status_code=404, reason=\"Not Found\").build()",
         "detail": "app.main",
         "documentation": {}
     },
@@ -103,7 +103,7 @@
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def handle_file_post(request: HTTPRequest, file_name: str, directory: str) -> str:\n    try:\n        content_length = int(request.headers.get(\"Content-Length\", 0))\n        file_content = request.body[:content_length]\n        with open(f\"{directory}/{file_name}\", \"w\") as file:\n            file.write(file_content)\n        return HTTPResponse(status_code=201, reason=\"Created\").build()\n    except Exception:\n        return HTTPResponse(status_code=400, reason=\"Bad Request\").build()\ndef handle_request(request_data: str) -> str:",
+        "peekOfCode": "def handle_file_post(request: HTTPRequest, file_name: str, directory: str) -> bytes:\n    try:\n        content_length = int(request.headers.get(\"Content-Length\", 0))\n        file_content = request.body[:content_length]\n        with open(f\"{directory}/{file_name}\", \"wb\") as file:\n            file.write(file_content.encode())\n        return HTTPResponse(status_code=201, reason=\"Created\").build()\n    except Exception:\n        return HTTPResponse(status_code=400, reason=\"Bad Request\").build()\ndef handle_request(request_data: str) -> bytes:",
         "detail": "app.main",
         "documentation": {}
     },
@@ -112,7 +112,7 @@
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def handle_request(request_data: str) -> str:\n    request = HTTPRequest(request_data)\n    if request.method == \"GET\":\n        if request.path == \"/\":\n            return handle_root()\n        if request.path == \"/user-agent\":\n            return handle_user_agent(request)\n        if re.match(r\"^/echo/(.+)$\", request.path):\n            return handle_echo(request)\n        if match := re.match(r\"^/files/(.+)$\", request.path):",
+        "peekOfCode": "def handle_request(request_data: str) -> bytes:\n    request = HTTPRequest(request_data)\n    if request.method == \"GET\":\n        if request.path == \"/\":\n            return handle_root()\n        if request.path == \"/user-agent\":\n            return handle_user_agent(request)\n        if re.match(r\"^/echo/(.+)$\", request.path):\n            return handle_echo(request)\n        if match := re.match(r\"^/files/(.+)$\", request.path):",
         "detail": "app.main",
         "documentation": {}
     },
@@ -121,7 +121,7 @@
         "kind": 2,
         "importPath": "app.main",
         "description": "app.main",
-        "peekOfCode": "def client_handler(client: socket.socket) -> None:\n    try:\n        data = client.recv(1024).decode().strip()\n        if data:\n            response = handle_request(data)\n            client.send(response.encode())\n    finally:\n        client.close()\ndef main() -> None:\n    server_socket = socket.create_server((\"localhost\", 4221), reuse_port=True)",
+        "peekOfCode": "def client_handler(client: socket.socket) -> None:\n    try:\n        data = client.recv(1024).decode().strip()\n        if data:\n            response = handle_request(data)\n            client.send(response)\n    finally:\n        client.close()\ndef main() -> None:\n    server_socket = socket.create_server((\"localhost\", 4221), reuse_port=True)",
         "detail": "app.main",
         "documentation": {}
     },
