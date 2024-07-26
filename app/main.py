@@ -40,8 +40,10 @@ class HTTPResponse:
         headers = "\r\n".join(f"{key}: {value}" for key, value in self.headers.items())
         return response_line.encode() + headers.encode() + b"\r\n\r\n" + self.body
 
+
 def handle_root() -> bytes:
     return HTTPResponse().build()
+
 
 def handle_user_agent(request: HTTPRequest) -> bytes:
     user_agent = request.headers.get("User-Agent", "").encode()
@@ -49,6 +51,7 @@ def handle_user_agent(request: HTTPRequest) -> bytes:
         headers={"Content-Type": "text/plain", "Content-Length": str(len(user_agent))},
         body=user_agent
     ).build()
+
 
 def handle_echo(request: HTTPRequest) -> bytes:
     match = re.match(r"^/echo/(.+)$", request.path)
@@ -66,6 +69,7 @@ def handle_echo(request: HTTPRequest) -> bytes:
         return HTTPResponse(headers=headers, body=body).build()
     return HTTPResponse(status_code=404, reason="Not Found").build()
 
+
 def handle_file_get(_: HTTPRequest, file_name: str, directory: str) -> bytes:
     try:
         with open(f"{directory}/{file_name}", "rb") as file:
@@ -77,6 +81,7 @@ def handle_file_get(_: HTTPRequest, file_name: str, directory: str) -> bytes:
     except FileNotFoundError:
         return HTTPResponse(status_code=404, reason="Not Found").build()
 
+
 def handle_file_post(request: HTTPRequest, file_name: str, directory: str) -> bytes:
     try:
         content_length = int(request.headers.get("Content-Length", 0))
@@ -86,6 +91,7 @@ def handle_file_post(request: HTTPRequest, file_name: str, directory: str) -> by
         return HTTPResponse(status_code=201, reason="Created").build()
     except Exception:
         return HTTPResponse(status_code=400, reason="Bad Request").build()
+
 
 def handle_request(request_data: str) -> bytes:
     request = HTTPRequest(request_data)
@@ -107,6 +113,7 @@ def handle_request(request_data: str) -> bytes:
 
     return HTTPResponse(status_code=404, reason="Not Found").build()
 
+
 def client_handler(client: socket.socket) -> None:
     try:
         data = client.recv(1024).decode().strip()
@@ -116,6 +123,7 @@ def client_handler(client: socket.socket) -> None:
     finally:
         client.close()
 
+
 def main() -> None:
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     server_socket.listen()
@@ -124,6 +132,7 @@ def main() -> None:
     while True:
         client, _ = server_socket.accept()
         threading.Thread(target=client_handler, args=(client,)).start()
+
 
 if __name__ == "__main__":
     main()
