@@ -37,7 +37,7 @@ This link can be found in the green button above Code.
 
 ## License
 
-This project is under license. See [LICENSE](LICENSE.md) for more information.
+This project is under license. See [LICENSE](LICENSE) for more information.
 
 ## Back to the top
 
