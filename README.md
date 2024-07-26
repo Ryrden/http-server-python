@@ -1,6 +1,6 @@
 # Build Your Own HTTP Server
 
-[![Project Cover](https://backend.codecrafters.io/progress/http-server/9d3ddbb3-2c0b-425a-8476-e3b1e5f53eba)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+[![Project Cover](https://backend.codecrafters.io/progress/http-server/9d3ddbb3-2c0b-425a-8476-e3b1e5f53eba)](https://app.codecrafters.io/users/Ryrden)
 
 > Starting point for building your own HTTP server in Python.
 
