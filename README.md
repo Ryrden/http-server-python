@@ -25,12 +25,13 @@ Follow the steps below to run the project on your local machine:
 
 ```bash
 git clone <repository-link>
+```
 
 This link can be found in the green button above Code.
-Run the project
 
-bash
+### Run the server
 
+```bash
 ./server.sh
 ```
 
